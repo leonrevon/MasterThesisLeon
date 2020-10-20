@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
+  m_Name: BoxSingleMarker
+  m_EditorClassIdentifier: 
+  m_GuidLow: 5653890810138440753
+  m_GuidHigh: 13124805133113271173
+  m_Images:
+  - m_SerializedGuid:
+      m_GuidLow: 5231205047226339235
+      m_GuidHigh: 17442641017775354045
+    m_SerializedTextureGuid:
+      m_GuidLow: 16493189442878071909
+      m_GuidHigh: 170655911885072219
+    m_Size: {x: 0.134, y: 0.10102344}
+    m_SpecifySize: 1
+    m_Name: TANOS-systainer-marker-schwarz-pink2_scaled
+    m_Texture: {fileID: 0}
