@@ -10,7 +10,8 @@ public class MeshingScript : MonoBehaviour
     List<GameObject> myChildObjects;
     public GameObject gameObject;    
     List<string> nameList = new List<string>();
-    Dictionary<string, int> meshVote = new Dictionary<string, int>();   
+    Dictionary<string, int> meshVote = new Dictionary<string, int>();
+    Dictionary<string, int> meshPartsCount = new Dictionary<string, int>();
     
     public Text text;
     public Material material;
@@ -55,20 +56,10 @@ public class MeshingScript : MonoBehaviour
             if (entry.Value > 100)
             {
                 GameObject.Find(entry.Key).GetComponent<Renderer>().sharedMaterial = material;
-            }
-            // do something with entry.Value or entry.Key
+            }            
         }
 
-    }
-
-    void CheckVotes(string name)
-    {
-        int val = meshVote[name];
-        if(val > 100)
-        {
-            GameObject.Find(name).GetComponent<Material>().SetColor("_Color", Color.green);
-        }
-    }
+    }   
 
     void RayCastMethod(Vector3 forward)
     {
