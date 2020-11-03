@@ -83,32 +83,51 @@ namespace UnityEngine.XR.ARFoundation
             if (m_PointCloud.identifiers.HasValue)
                 {
                     var identifiers = m_PointCloud.identifiers.Value;
-                    RaycastHit hit;               
+                    RaycastHit hit;
 
                 //Shoot rays to check if there is collider to hit the CAD Model, if yes, store the points.
-                for (int k = -2; k < 2; k++)
+                //for (int k = -2; k < 2; k++)
+                //{
+                //    for (int j = -2; j < 2; j++)
+                //    {
+                //float screenX = 0 + j;
+                //float screenY = 0 + k;
+                //Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
+                Vector3 forward = Camera.main.transform.TransformDirection(Random.Range(-10, 10), Random.Range(-10, 10), 100);
+
+                RaycastHit[] hits;
+                hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+
+               for(int i = 0; i < hits.Length; i++)
                 {
-                    for (int j = -2; j < 2; j++)
+                   for(int j = 0; j < positions.Length; j++)
                     {
-                        float screenX = 0 + j;
-                        float screenY = 0 + k;
-                        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
-                                          
-                        if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
+                        var dis = Vector3.Distance(hits[i].point, positions[j]);
+                        if (dis < 0.01)
                         {
-                            for (int i = 0; i < positions.Length; i++)
-                            {
-                                var dis = Vector3.Distance(hit.point, positions[i]);
-                                if (dis < 0.01)
-                                {                                    
-                                    m_Points[identifiers[i]] = positions[i];                                                                        
-                                    pointCloudPosition.Add(m_Points[identifiers[i]]);
-                                    colliderHitName.Add(hit.collider.name);
-                                }
-                            }
+                            m_Points[identifiers[j]] = positions[j];
+                            pointCloudPosition.Add(m_Points[identifiers[j]]);
+                            colliderHitName.Add(hits[i].collider.name);
                         }
                     }
                 }
+                
+
+                        //if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
+                        //{
+                        //    for (int i = 0; i < positions.Length; i++)
+                        //    {
+                        //        var dis = Vector3.Distance(hit.point, positions[i]);
+                        //        if (dis < 0.01)
+                        //        {                                    
+                        //            m_Points[identifiers[i]] = positions[i];                                                                        
+                        //            pointCloudPosition.Add(m_Points[identifiers[i]]);
+                        //            colliderHitName.Add(hit.collider.name);
+                        //        }
+                        //    }
+                        //}
+                //    }
+                //}
 
             }
 

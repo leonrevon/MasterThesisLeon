@@ -66,14 +66,15 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     public Text text;
     public Text debug;
     public GameObject gameObject;
-    bool effectsOn;
-    bool effectsOnPerc;
+    public Material material;
+    bool effectsOn;    
     string voteResult = "";
 
     Dictionary<string, Vector3> vector = new Dictionary<string, Vector3>();
     Dictionary<string, List<Vector3>> valueDictionary = new Dictionary<string, List<Vector3>>();
     Dictionary<string, int> voteCalculation = new Dictionary<string, int>();
     Dictionary<string, GameObject> availableParts = new Dictionary<string, GameObject>();
+    Dictionary<string, Material> defaultMaterial = new Dictionary<string, Material>();
 
     List<GameObject> myChildObjects;
     List<string> nameList = new List<string>();
@@ -120,8 +121,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         {
             var visualizer = pointCloud.GetComponent<ARAllPointCloudPointsParticleVisualizer>();
             addedPoints = visualizer.pointCloudPosition;
-            colliderHitName = visualizer.colliderHitName;
-
+            colliderHitName = visualizer.colliderHitName;            
             
         }
     }
@@ -208,7 +208,9 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
             vector.Add(name, Vector3.zero);                        
             valueDictionary.Add(name, GTUpdate);
             availableParts.Add(name, myChildObject);
-            
+            defaultMaterial.Add(name, myChildObject.GetComponent<Renderer>().material);
+
+
         });
 
         voteResult = "";
@@ -219,17 +221,26 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     {        
         if (effectsOn)
         {
-            RaycastHit hit;
-            //for (int i = 0; i < 1000; i++)
-
-            
+            //RaycastHit hit;
+            RaycastHit[] hits;
             Vector3 forward = Camera.main.transform.TransformDirection(Random.Range(-10, 10), Random.Range(-10, 10), 100);
 
-            if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
-            {                                                                       
-                    GTUpdate(hit.collider.name, hit.point);
-                    addedPointsGT.Add(hit.point);                    
+            hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i].collider.CompareTag("CAD"))
+                {
+                    GTUpdate(hits[i].collider.name, hits[i].point);
+                    addedPointsGT.Add(hits[i].point);
+                }
             }
+          
+
+            //if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
+            //{                                                                       
+            //        GTUpdate(hit.collider.name, hit.point);
+            //        addedPointsGT.Add(hit.point);                    
+            //}
 
         }
 
@@ -240,29 +251,40 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
 
         foreach (string name in nameList)
         {
+            List<Vector3> GTVector = new List<Vector3>(valueDictionary[name]);
             VoteResultPrint(name);
-            if (effectsOnPerc)
-            {
-                CheckStatus(name);
 
-            }
-            else
-                continue;
         }
                         
         voteResult = "";      
         voteCalculation.Clear();
- 
+
+        
+
     }
 
     
     void VoteResultPrint(string name)
     {
+        List<Vector3> GTVector = new List<Vector3>(valueDictionary[name]);
         if (voteCalculation.ContainsKey(name))
         {
-            voteResult = voteResult + "\n" + name + ": " + voteCalculation[name].ToString();
+            //voteResult = voteResult + "\n" + name + ": " + voteCalculation[name].ToString();
+            voteResult = voteResult + "\n" + name + ": " + PercentageCount(GTVector,voteCalculation[name]).ToString();
 
             text.text = voteResult;
+            if (effectsOn)
+            {
+                if (PercentageCount(GTVector, voteCalculation[name]) > 0.05)
+                {
+                    GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
+                }
+                else
+                {
+                    GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
+                }
+            }
+            
 
         }
     }
@@ -273,21 +295,14 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
                 voteCalculation.Add(name, 0);
             }
           
-            voteCalculation[name]++;
- 
-                                              
+            voteCalculation[name]++;                                              
     }
 
 // For Toggle function to enable ACTIVE GT collection
     public void EffectsOn(bool value)
     {
         effectsOn = value;
-    }
-
-    public void EffectsOnPerc(bool value)
-    {
-        effectsOnPerc = value;
-    }
+    }   
 
     void GTUpdate(string name, Vector3 item)
     {
@@ -297,32 +312,6 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         valueDictionary.Add(name, tempVectorList);
     }
 
-    void CheckStatus(string name)
-    {
-        List<Vector3> GTVector = new List<Vector3>(valueDictionary[name]);
-        float partNumber = voteCalculation[name];
-        //GTVector = valueDictionary[name];  // Vector List of that part of points gather
-        //partNumber = voteCalculation[name];  //Number of points gather for that part
-
-
-        // If GT part available
-        // check PC Raw
-
-
-        debug.text = "first part";
-        if (GTVector.Count() != 0)
-        {
-            debug.text = "second part";
-            if (PercentageCount(GTVector, partNumber) < 0.2)
-            {
-                debug.text = "third part";
-                Destroy(availableParts[name]);
-                
-            }
-        }
-        
-
-    }
 
     float PercentageCount(List<Vector3> GTdata, float num)
     {
