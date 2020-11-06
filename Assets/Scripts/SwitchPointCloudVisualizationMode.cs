@@ -33,55 +33,45 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         get => m_Log;
         set => m_Log = value;
     }
-
-    [SerializeField]
-    ARAllPointCloudPointsParticleVisualizer.Mode m_Mode = ARAllPointCloudPointsParticleVisualizer.Mode.All;
-
-    public ARAllPointCloudPointsParticleVisualizer.Mode mode
-    {
-        get => m_Mode;
-        set => SetMode(value);
-    }       
-
-    public void SwitchVisualizationMode()
-    {
-        SetMode((ARAllPointCloudPointsParticleVisualizer.Mode)(((int)m_Mode + 1) % 2));
-    }
+   
 
     void OnEnable()
-    {
-        SetMode(m_Mode);
+    {        
         GetComponent<ARPointCloudManager>().pointCloudsChanged += OnPointCloudsChanged;
     }
     /// <summary>
     /// Added Lines from my own
-    /// </summary>    
-    string pointCloudPath;   
-    string pointCloudPathName;
+    /// </summary>        
     List<Vector3> addedPoints = new List<Vector3>();
     List<Vector3> addedPointsGT = new List<Vector3>();
     List<string> colliderHitName = new List<string>();
+    List<string> gtHitName = new List<string>();
 
     public GameObject cube;
     public Text text;
+    public Text text2;
+    public Text text3;
     public Text debug;
     public GameObject gameObject;
     public Material material;
-    bool effectsOn;    
+    bool effectsOn;
+    bool updateCheck;
+    
     string voteResult = "";
+    string voteResult2 = "";
+    string voteResult3 = "";
 
     Dictionary<string, Vector3> vector = new Dictionary<string, Vector3>();
     Dictionary<string, List<Vector3>> valueDictionary = new Dictionary<string, List<Vector3>>();
     Dictionary<string, int> voteCalculation = new Dictionary<string, int>();
     Dictionary<string, GameObject> availableParts = new Dictionary<string, GameObject>();
     Dictionary<string, Material> defaultMaterial = new Dictionary<string, Material>();
+    Dictionary<string, int> GTPart = new Dictionary<string, int>();           
 
     List<GameObject> myChildObjects;
     List<string> nameList = new List<string>();
 
-
-    StringBuilder m_StringBuilder = new StringBuilder();
-    
+    StringBuilder m_StringBuilder = new StringBuilder();    
 
     void OnPointCloudsChanged(ARPointCloudChangedEventArgs eventArgs)
     {
@@ -89,28 +79,13 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         foreach (var pointCloud in eventArgs.updated)
         {
             m_StringBuilder.Append($"\n{pointCloud.trackableId}: ");
-            if (m_Mode == ARAllPointCloudPointsParticleVisualizer.Mode.CurrentFrame)
-            {
-                if (pointCloud.positions.HasValue)
-                {
-                    m_StringBuilder.Append($"{pointCloud.positions.Value.Length}");
-                }
-                else
-                {
-                    m_StringBuilder.Append("0");
-                }
 
-                m_StringBuilder.Append(" points in current frame.");
-            }
-            else
+            var visualizer = pointCloud.GetComponent<ARAllPointCloudPointsParticleVisualizer>();
+            if (visualizer)
             {
-                var visualizer = pointCloud.GetComponent<ARAllPointCloudPointsParticleVisualizer>();
-                if (visualizer)
-                {
-                    m_StringBuilder.Append($"{visualizer.pointCloudPosition.Count} total points");
-                }
-
+                m_StringBuilder.Append($"{visualizer.pointCloudPosition.Count} total points");
             }
+
         }
         if (log)
         {
@@ -121,47 +96,20 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         {
             var visualizer = pointCloud.GetComponent<ARAllPointCloudPointsParticleVisualizer>();
             addedPoints = visualizer.pointCloudPosition;
-            colliderHitName = visualizer.colliderHitName;            
-            
-        }
-    }
-
-
-    void SetMode(ARAllPointCloudPointsParticleVisualizer.Mode mode)
-    {
-        m_Mode = mode;
-        if (toggleButton)
-        {
-            var text = toggleButton.GetComponentInChildren<Text>();
-            switch (mode)
-            {
-                case ARAllPointCloudPointsParticleVisualizer.Mode.All:
-                    text.text = "All";
-                    break;
-                case ARAllPointCloudPointsParticleVisualizer.Mode.CurrentFrame:
-                    text.text = "Current Frame";
-                    break;
-            }
-        }
-
-        var manager = GetComponent<ARPointCloudManager>();
-        foreach (var pointCloud in manager.trackables)
-        {
-            var visualizer = pointCloud.GetComponent<ARAllPointCloudPointsParticleVisualizer>();
-            if (visualizer)
-            {
-                visualizer.mode = mode;
-            }
-        }
+            colliderHitName = visualizer.colliderHitName;
+            gtHitName = visualizer.gtHitName;                 
+        }        
+        
     }
 
     public void CompilerData()
     {
-        foreach (var name in nameList) //Generate GT data
+        foreach(var name in nameList) //Generate GT data
         {
-            List<Vector3> GTVectorList = new List<Vector3>(valueDictionary[name]);            
+            List<Vector3> GTVectorList = new List<Vector3>(valueDictionary[name]);
             GenerateSheets(GTVectorList, name);
         }
+
 
         GenerateSheets(addedPoints, "pointCloudRaw");
         GenerateSheets(addedPointsGT, "pointCloudGT");
@@ -169,9 +117,10 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
 
     public void GenerateSheets(List<Vector3> addedPoints, string pathname)
     {
-        pointCloudPathName = pathname + ".ply";
 
-        pointCloudPath = Application.persistentDataPath + "/" + pointCloudPathName;        
+        string pointCloudPathName = pathname + ".ply";
+
+        string pointCloudPath = Application.persistentDataPath + "/" + pointCloudPathName;        
 
         StreamWriter plyWriter = new StreamWriter(pointCloudPath);
         plyWriter.WriteLine("ply");
@@ -197,6 +146,45 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         GoogleDriveFiles.Create(plyFile).Send();
     }
 
+    public void GenerateSummary()
+    {
+
+        enabled = false;
+        string filePathName = "GTAndPartsSummary.csv";
+
+        string filePath = Application.persistentDataPath + "/" + filePathName;
+
+        StreamWriter csvWriter = new StreamWriter(filePath);
+        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number");
+
+
+        foreach (string name in colliderHitName)
+        {
+            CalculateVoteCount(name);
+        }
+
+        foreach (string name in gtHitName)
+        {
+            CalculateGTCount(name);
+        }
+
+        foreach (var names in nameList)
+        {
+            if (voteCalculation.ContainsKey(names))
+                csvWriter.WriteLine(names + "," + voteCalculation[names] + "," + GTPart[names]);
+        }               
+
+        csvWriter.Flush();
+        csvWriter.Close();
+
+        var csvContent = File.ReadAllBytes(filePath);
+        if (csvContent == null) return;
+
+        var csvFile = new UnityGoogleDrive.Data.File() { Name = filePathName, Content = csvContent };
+        GoogleDriveFiles.Create(csvFile).Send();
+        enabled = true;
+    }
+
     void Start()
     {
         myChildObjects = gameObject.GetComponentsInChildren<Transform>().ToList().Select(x => x.gameObject).ToList();
@@ -211,71 +199,79 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
             defaultMaterial.Add(name, myChildObject.GetComponent<Renderer>().material);
 
 
-        });
-
-        voteResult = "";
-
+        });       
     }
 
     void Update()
-    {        
-        if (effectsOn)
-        {
-            //RaycastHit hit;
-            RaycastHit[] hits;
-            Vector3 forward = Camera.main.transform.TransformDirection(Random.Range(-10, 10), Random.Range(-10, 10), 100);
-
-            hits = Physics.RaycastAll(Camera.main.transform.position, forward);
-            for (int i = 0; i < hits.Length; i++)
+    {                
+            for (int x = -2; x < 2; x++)
             {
-                if (hits[i].collider.CompareTag("CAD"))
+                for (int y = -2; y < 2; y++)
                 {
-                    GTUpdate(hits[i].collider.name, hits[i].point);
-                    addedPointsGT.Add(hits[i].point);
+                    float screenX = 0 + x;
+                    float screenY = 0 + y;
+
+                    Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
+
+                    RaycastHit[] hits;
+
+
+                    hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+                    for (int i = 0; i < hits.Length; i++)
+                    {
+                        if (hits[i].collider.CompareTag("CAD"))
+                        {
+                            GTUpdate(hits[i].collider.name, hits[i].point);
+                            addedPointsGT.Add(hits[i].point);
+                        }
+                    }
                 }
             }
-          
-
-            //if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
-            //{                                                                       
-            //        GTUpdate(hit.collider.name, hit.point);
-            //        addedPointsGT.Add(hit.point);                    
-            //}
-
-        }
 
         foreach (string name in colliderHitName)
         {
             CalculateVoteCount(name);
         }
 
-        foreach (string name in nameList)
+        foreach (string name in gtHitName)
         {
-            List<Vector3> GTVector = new List<Vector3>(valueDictionary[name]);
+            CalculateGTCount(name);
+        }
+
+        foreach (string name in nameList)
+        {            
             VoteResultPrint(name);
 
         }
                         
-        voteResult = "";      
+        voteResult = "";
+        voteResult2 = "";
+        voteResult3 = "";
+
         voteCalculation.Clear();
-
-        
-
+        GTPart.Clear();        
     }
 
     
     void VoteResultPrint(string name)
-    {
-        List<Vector3> GTVector = new List<Vector3>(valueDictionary[name]);
+    {       
         if (voteCalculation.ContainsKey(name))
         {
-            //voteResult = voteResult + "\n" + name + ": " + voteCalculation[name].ToString();
-            voteResult = voteResult + "\n" + name + ": " + PercentageCount(GTVector,voteCalculation[name]).ToString();
+
+            
+            voteResult = voteResult + "\n" + name + ": " + GTPart[name].ToString(); //GT captured
+            voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(voteCalculation[name] , GTPart[name]).ToString("F2")+ "%"; 
+            voteResult3 = voteResult3 + "\n" + name + ": " + voteCalculation[name].ToString(); //PC Captured
 
             text.text = voteResult;
+            text2.text = voteResult2;
+            text3.text = voteResult3;
+
+            
+
             if (effectsOn)
             {
-                if (PercentageCount(GTVector, voteCalculation[name]) > 0.05)
+                if (PercentageCount(voteCalculation[name], GTPart[name]) > 10)
                 {
                     GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
                 }
@@ -298,6 +294,16 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
             voteCalculation[name]++;                                              
     }
 
+    void CalculateGTCount (string name)
+    {
+        if (!GTPart.ContainsKey(name))
+        {
+            GTPart.Add(name, 0);
+        }
+
+        GTPart[name]++;
+    }
+
 // For Toggle function to enable ACTIVE GT collection
     public void EffectsOn(bool value)
     {
@@ -313,9 +319,14 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     }
 
 
-    float PercentageCount(List<Vector3> GTdata, float num)
+    //float PercentageCount(List<Vector3> GTdata, float num)
+    //{
+    //    return num/(GTdata.Count());
+    //}
+
+    float PercentageCount(float part, float gt)
     {
-        return num/(GTdata.Count());
+        return part * 100 / gt;
     }
 
     public void ChangeScene()
