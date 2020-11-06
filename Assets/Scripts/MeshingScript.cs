@@ -1,21 +1,32 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityGoogleDrive;
 
 public class MeshingScript : MonoBehaviour
 {
     List<GameObject> myChildObjects;
     public GameObject gameObject;    
     List<string> nameList = new List<string>();
+    public List<string> gtHitName = new List<string>();
     Dictionary<string, int> meshVote = new Dictionary<string, int>();
-    Dictionary<string, int> meshPartsCount = new Dictionary<string, int>();
+    Dictionary<string, int> gtNumber = new Dictionary<string, int>();
     
+
     public Text text;
+    public Text text2;
+    public Text text3;
+
     public Material material;
     string voteResult = "";
+    string voteResult2 = "";
+    string voteResult3 = "";
+    string filePath;
+    string filePathName;
 
     public void ChangeScene()
     {
@@ -81,26 +92,76 @@ public class MeshingScript : MonoBehaviour
                     }
                 }
             }
+            else
+            {
+                GTCheckVote(hits[i].collider.name);
+            }
         }
     }
 
     void MeshCheckVote(string name)
     {
-        if (!meshVote.ContainsKey(name))
-        {
+        if (!meshVote.ContainsKey(name))        
             meshVote.Add(name, 0);
-        }
-
+        
         meshVote[name]++;
+    }
+
+    void GTCheckVote(string name)
+    {
+        if (!gtNumber.ContainsKey(name))
+            gtNumber.Add(name, 0);
+
+        gtNumber[name]++;                
     }
 
     void VoteResultPrint(string name)
     {
         if (meshVote.ContainsKey(name))
         {
-            voteResult = voteResult + "\n" + name + ": " + meshVote[name].ToString();
+            voteResult = voteResult + "\n" + name + ": " + gtNumber[name].ToString();//GT captured            
+            voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(meshVote[name], gtNumber[name]).ToString("F2") + "%"; // Percentage
+            voteResult3 = voteResult3 + "\n" + name + ": " + meshVote[name].ToString();//PC captured            
 
-            text.text = voteResult;                                    
+
+            text.text = voteResult;
+            text2.text = voteResult2;
+            text3.text = voteResult3;
+
+            if (PercentageCount(meshVote[name], gtNumber[name]) > 0.1)
+            {
+                GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
+            }
         }
+    }
+
+    float PercentageCount(float part, float gt)
+    {
+        return part * 100 / gt;
+    }
+
+    public void GenerateSheets()
+    {
+        filePathName = "meshGTAndPartsSummary.csv";
+
+        filePath = Application.persistentDataPath + "/" + filePathName;
+
+        StreamWriter csvWriter = new StreamWriter(filePath);
+        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number");
+
+        foreach (string names in nameList)
+        {
+            csvWriter.WriteLine(names + "," + meshVote[names] + "," + gtNumber[names]);
+        }
+
+
+        csvWriter.Flush();
+        csvWriter.Close();
+
+        var plyContent = File.ReadAllBytes(filePath);
+        if (plyContent == null) return;
+
+        var plyFile = new UnityGoogleDrive.Data.File() { Name = filePathName, Content = plyContent };
+        GoogleDriveFiles.Create(plyFile).Send();
     }
 }
