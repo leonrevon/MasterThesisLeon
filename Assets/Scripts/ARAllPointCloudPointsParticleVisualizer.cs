@@ -33,7 +33,6 @@ namespace UnityEngine.XR.ARFoundation
         public ulong pointCloudIdentifier;
 
 
-
         void OnPointCloudChanged(ARPointCloudUpdatedEventArgs eventArgs)
         {
             RenderPoints();
@@ -53,7 +52,6 @@ namespace UnityEngine.XR.ARFoundation
 
             if (!m_PointCloud.positions.HasValue)
                 return;
-
 
             var positions = m_PointCloud.positions.Value;
 
@@ -83,10 +81,8 @@ namespace UnityEngine.XR.ARFoundation
                                 if (dis < 0.01)
                                 {
                                     m_Points[identifiers[j]] = positions[j];
-                                    pointCloudPosition.Add(m_Points[identifiers[j]]); //Dictionary add position with key identifier
-                                    PCCount(hits[i].collider.name);
-                                    colliderHitName.Add(hits[i].collider.name);
-                                    GTUpdate(hits[i].collider.name, positions[j]);
+                                    pointCloudPosition.Add(m_Points[identifiers[j]]); //Dictionary add position with key identifier                                    
+                                    colliderHitName.Add(hits[i].collider.name);                                    
                                 }
                             }
                         }
@@ -162,39 +158,7 @@ namespace UnityEngine.XR.ARFoundation
         public void EffectsOn(bool value)
         {
             effectsOn = value;
-        }
-
-        void GTUpdate(string name, Vector3 item)
-        {
-            if (!GTParts.ContainsKey(name))
-            {
-                GTParts.Add(name, new List<Vector3>());
-            }
-            List<Vector3> tempVectorList = new List<Vector3>(GTParts[name]);
-            GTParts.Remove(name);
-            tempVectorList.Add(item);
-            GTParts.Add(name, tempVectorList);
-        }
-
-        void GTCount(string name)
-        {
-            if (!GTHit.ContainsKey(name))
-            {
-                GTHit.Add(name, 0);
-            }
-
-            GTHit[name]++;
-        }
-
-        void PCCount(string name)
-        {
-            if (!PCHit.ContainsKey(name))
-            {
-                PCHit.Add(name, 0);
-            }
-
-            PCHit[name]++;
-        }
+        }           
 
         public ARPointCloud m_PointCloud;
 
