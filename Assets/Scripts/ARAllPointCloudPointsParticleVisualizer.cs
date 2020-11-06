@@ -18,42 +18,21 @@ namespace UnityEngine.XR.ARFoundation
         public List<ARPoint> addedPoints = new List<ARPoint>();
         public List<Vector3> pointCloudPosition = new List<Vector3>();
         public List<Vector3> addedPointsGT = new List<Vector3>();
-        public List<string> colliderHitName = new List<string>();      
-       
+        public List<string> colliderHitName = new List<string>();
+        public List<string> gtHitName = new List<string>();
+        public List<string> PCHitName = new List<string>();
+        public Dictionary<string, List<Vector3>> GTParts = new Dictionary<string, List<Vector3>>();
+        public Dictionary<string, int> GTHit = new Dictionary<string, int>();
+        public Dictionary<string, int> PCHit = new Dictionary<string, int>();
+        bool effectsOn;
 
 
-        public enum Mode
-        {
-            /// <summary>
-            /// Draw all the feature points from the start of the session
-            /// </summary>
-            All,
-
-            /// <summary>
-            /// Only draw the feature points from the current frame
-            /// </summary>
-            CurrentFrame,
-        }
-
-        [SerializeField]
-        [Tooltip("Whether to draw all the feature points or only the ones from the current frame.")]
-        Mode m_Mode;
-
-        public Mode mode
-        {
-            get => m_Mode;
-            set
-            {
-                m_Mode = value;
-                RenderPoints();
-            }
-        }
 
 
         public int totalPointCount => m_Points.Count;
         public ulong pointCloudIdentifier;
-      
-       
+
+
 
         void OnPointCloudChanged(ARPointCloudUpdatedEventArgs eventArgs)
         {
@@ -62,124 +41,90 @@ namespace UnityEngine.XR.ARFoundation
 
         void SetParticlePosition(int index, Vector3 position)
         {
-                m_Particles[index].startColor = m_ParticleSystem.main.startColor.color;
-                m_Particles[index].startSize = m_ParticleSystem.main.startSize.constant;
-                m_Particles[index].position = position;
-                m_Particles[index].remainingLifetime = 1f;               
-        }    
+            m_Particles[index].startColor = m_ParticleSystem.main.startColor.color;
+            m_Particles[index].startSize = m_ParticleSystem.main.startSize.constant;
+            m_Particles[index].position = position;
+            m_Particles[index].remainingLifetime = 1f;
+        }
 
 
         void RenderPoints()
         {
 
-
             if (!m_PointCloud.positions.HasValue)
                 return;
 
-            
-                var positions = m_PointCloud.positions.Value;
-           
+
+            var positions = m_PointCloud.positions.Value;
+
             //Store all the positions over time associated with their unique identifiers
             if (m_PointCloud.identifiers.HasValue)
+            {
+                var identifiers = m_PointCloud.identifiers.Value;
+
+                for (int x = -2; x < 2; x++)
                 {
-                    var identifiers = m_PointCloud.identifiers.Value;
-                    RaycastHit hit;
-
-                //Shoot rays to check if there is collider to hit the CAD Model, if yes, store the points.
-                //for (int k = -2; k < 2; k++)
-                //{
-                //    for (int j = -2; j < 2; j++)
-                //    {
-                //float screenX = 0 + j;
-                //float screenY = 0 + k;
-                //Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
-                Vector3 forward = Camera.main.transform.TransformDirection(Random.Range(-10, 10), Random.Range(-10, 10), 100);
-
-                RaycastHit[] hits;
-                hits = Physics.RaycastAll(Camera.main.transform.position, forward);
-
-               for(int i = 0; i < hits.Length; i++)
-                {
-                   for(int j = 0; j < positions.Length; j++)
+                    for (int y = -2; y < 2; y++)
                     {
-                        var dis = Vector3.Distance(hits[i].point, positions[j]);
-                        if (dis < 0.01)
+                        float screenX = 0 + x;
+                        float screenY = 0 + y;
+
+                        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
+                        RaycastHit[] hits;
+                        hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+
+                        for (int i = 0; i < hits.Length; i++)
                         {
-                            m_Points[identifiers[j]] = positions[j];
-                            pointCloudPosition.Add(m_Points[identifiers[j]]);
-                            colliderHitName.Add(hits[i].collider.name);
+                            gtHitName.Add(hits[i].collider.name);
+
+                            for (int j = 0; j < positions.Length; j++)
+                            {
+                                var dis = Vector3.Distance(hits[i].point, positions[j]);
+                                if (dis < 0.01)
+                                {
+                                    m_Points[identifiers[j]] = positions[j];
+                                    pointCloudPosition.Add(m_Points[identifiers[j]]); //Dictionary add position with key identifier
+                                    PCCount(hits[i].collider.name);
+                                    colliderHitName.Add(hits[i].collider.name);
+                                    GTUpdate(hits[i].collider.name, positions[j]);
+                                }
+                            }
                         }
                     }
                 }
-                
-
-                        //if (Physics.Raycast(Camera.main.transform.position, forward, out hit))
-                        //{
-                        //    for (int i = 0; i < positions.Length; i++)
-                        //    {
-                        //        var dis = Vector3.Distance(hit.point, positions[i]);
-                        //        if (dis < 0.01)
-                        //        {                                    
-                        //            m_Points[identifiers[i]] = positions[i];                                                                        
-                        //            pointCloudPosition.Add(m_Points[identifiers[i]]);
-                        //            colliderHitName.Add(hit.collider.name);
-                        //        }
-                        //    }
-                        //}
-                //    }
-                //}
-
             }
 
 
-                // Make sure we have enough particles to store all the ones we want to draw
-                int numParticles = (mode == Mode.All) ? m_Points.Count : positions.Length;
-                if (m_Particles == null || m_Particles.Length < numParticles)
-                {
-                    m_Particles = new ParticleSystem.Particle[numParticles];
-                }
+            // Make sure we have enough particles to store all the ones we want to draw
+            int numParticles = m_Points.Count;
+            if (m_Particles == null || m_Particles.Length < numParticles)
+            {
+                m_Particles = new ParticleSystem.Particle[numParticles];
+            }
+            // Draw all the particles
+            int particleIndex = 0;
+            foreach (var kvp in m_Points)
+            {
+                SetParticlePosition(particleIndex++, kvp.Value);
+            }
 
-                switch (mode)
-                {
-                    case Mode.All:
-                        {
-                            // Draw all the particles
-                            int particleIndex = 0;
-                            foreach (var kvp in m_Points)
-                            {
-                                SetParticlePosition(particleIndex++, kvp.Value);
-                                
-                        }
-                            break;
-                        }
-                    case Mode.CurrentFrame:
-                        {
-                            // Only draw the particles in the current frame
-                            for (int i = 0; i < positions.Length; ++i)
-                            {
-                                SetParticlePosition(i, positions[i]);
-                            }
-                            break;
-                        }
-                }
+            // Remove any existing particles by setting remainingLifetime
+            // to a negative value.
+            for (int i = numParticles; i < m_NumParticles; ++i)
+            {
+                m_Particles[i].remainingLifetime = -1f;
+            }
 
-                // Remove any existing particles by setting remainingLifetime
-                // to a negative value.
-                for (int i = numParticles; i < m_NumParticles; ++i)
-                {
-                    m_Particles[i].remainingLifetime = -1f;
-                }
+            m_ParticleSystem.SetParticles(m_Particles, Math.Max(numParticles, m_NumParticles));
+            m_NumParticles = numParticles;
 
-                m_ParticleSystem.SetParticles(m_Particles, Math.Max(numParticles, m_NumParticles));
-                m_NumParticles = numParticles;
-            
         }
-        
+
 
         void Awake()
         {
             m_PointCloud = GetComponent<ARPointCloud>();
-            m_ParticleSystem = GetComponent<ParticleSystem>();            
+            m_ParticleSystem = GetComponent<ParticleSystem>();
         }
 
         void OnEnable()
@@ -196,7 +141,7 @@ namespace UnityEngine.XR.ARFoundation
 
         void Update()
         {
-            UpdateVisibility();           
+            UpdateVisibility();
         }
 
         void UpdateVisibility()
@@ -214,13 +159,48 @@ namespace UnityEngine.XR.ARFoundation
                 renderer.enabled = visible;
         }
 
-        
+        public void EffectsOn(bool value)
+        {
+            effectsOn = value;
+        }
+
+        void GTUpdate(string name, Vector3 item)
+        {
+            if (!GTParts.ContainsKey(name))
+            {
+                GTParts.Add(name, new List<Vector3>());
+            }
+            List<Vector3> tempVectorList = new List<Vector3>(GTParts[name]);
+            GTParts.Remove(name);
+            tempVectorList.Add(item);
+            GTParts.Add(name, tempVectorList);
+        }
+
+        void GTCount(string name)
+        {
+            if (!GTHit.ContainsKey(name))
+            {
+                GTHit.Add(name, 0);
+            }
+
+            GTHit[name]++;
+        }
+
+        void PCCount(string name)
+        {
+            if (!PCHit.ContainsKey(name))
+            {
+                PCHit.Add(name, 0);
+            }
+
+            PCHit[name]++;
+        }
 
         public ARPointCloud m_PointCloud;
 
         ParticleSystem m_ParticleSystem;
 
-        ParticleSystem.Particle[] m_Particles;       
+        ParticleSystem.Particle[] m_Particles;
 
         int m_NumParticles;
 
