@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1105479646733942727
+--- !u!1 &3313933992854237870
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,26 +8,26 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8194742412660361768}
-  - component: {fileID: 3498849666995554029}
-  - component: {fileID: 4526482359178028481}
-  - component: {fileID: 8062761548383234327}
-  - component: {fileID: 4915600019292328838}
-  - component: {fileID: 2705506114967019981}
+  - component: {fileID: 1134134986435498448}
+  - component: {fileID: 7176669569791088986}
+  - component: {fileID: 1749991222568572639}
+  - component: {fileID: 1224234234252115167}
+  - component: {fileID: 6961356025292063349}
+  - component: {fileID: 8883345861007598869}
   m_Layer: 0
-  m_Name: ARPointCloud_NoScript
+  m_Name: ARPointCloud(newScript)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8194742412660361768
+--- !u!4 &1134134986435498448
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
+  m_GameObject: {fileID: 3313933992854237870}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
@@ -35,13 +35,13 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!198 &3498849666995554029
+--- !u!198 &7176669569791088986
 ParticleSystem:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
+  m_GameObject: {fileID: 3313933992854237870}
   serializedVersion: 6
   lengthInSec: 5
   simulationSpeed: 1
@@ -603,7 +603,7 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     randomizeRotationDirection: 0
-    maxNumParticles: 1000
+    maxNumParticles: 1
     size3D: 0
     rotation3D: 0
     gravityModifier:
@@ -3557,9 +3557,9 @@ ParticleSystem:
         m_NumAlphaKeys: 2
     range: {x: 0, y: 1}
   CollisionModule:
-    enabled: 0
+    enabled: 1
     serializedVersion: 3
-    type: 0
+    type: 1
     collisionMode: 0
     colliderForce: 0
     multiplyColliderForceByParticleSize: 0
@@ -4693,14 +4693,14 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
---- !u!199 &4526482359178028481
+--- !u!199 &1749991222568572639
 ParticleSystemRenderer:
   serializedVersion: 6
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
+  m_GameObject: {fileID: 3313933992854237870}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -4757,47 +4757,46 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
---- !u!114 &8062761548383234327
+--- !u!114 &1224234234252115167
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
+  m_GameObject: {fileID: 3313933992854237870}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: afcab4e7938ae724a8a59ecac3580761, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_DestroyOnRemoval: 1
---- !u!114 &4915600019292328838
+--- !u!114 &6961356025292063349
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
+  m_GameObject: {fileID: 3313933992854237870}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 468ea6c98cd64494abbc2c2f34d6cde2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2705506114967019981
+--- !u!114 &8883345861007598869
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1105479646733942727}
-  m_Enabled: 0
+  m_GameObject: {fileID: 3313933992854237870}
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9487356b14d79479a9be9ede88c60b47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 3334346786566561318, guid: a5f974a7bddd94492b28b7ce283d410d, type: 3}
-  cube: {fileID: 7848234991179599348, guid: 1445ad1521a5f4f2b83b5a59e5c066eb, type: 3}
   pointCloudPosition: []
   addedPointsGT: []
+  colliderHitName: []
   m_Mode: 0
   pointCloudIdentifier: 0
   m_PointCloud: {fileID: 0}
