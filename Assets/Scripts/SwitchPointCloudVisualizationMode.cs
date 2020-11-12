@@ -51,7 +51,6 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     public Text text;
     public Text text2;
     public Text text3;
-    public Text debug;
     public GameObject gameObject;
     public Material material;
     bool effectsOn;
@@ -204,29 +203,29 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
 
     void Update()
     {                
-            for (int x = -2; x < 2; x++)
-            {
-                for (int y = -2; y < 2; y++)
-                {
-                    float screenX = 0 + x;
-                    float screenY = 0 + y;
+            //for (int x = -2; x < 2; x++)
+            //{
+            //    for (int y = -2; y < 2; y++)
+            //    {
+            //        float screenX = 0 + x;
+            //        float screenY = 0 + y;
 
-                    Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
+            //        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
 
-                    RaycastHit[] hits;
+            //        RaycastHit[] hits;
 
 
-                    hits = Physics.RaycastAll(Camera.main.transform.position, forward);
-                    for (int i = 0; i < hits.Length; i++)
-                    {
-                        if (hits[i].collider.CompareTag("CAD"))
-                        {
-                            GTUpdate(hits[i].collider.name, hits[i].point);
-                            addedPointsGT.Add(hits[i].point);
-                        }
-                    }
-                }
-            }
+            //        hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+            //        for (int i = 0; i < hits.Length; i++)
+            //        {
+            //            if (hits[i].collider.CompareTag("CAD"))
+            //            {
+            //                GTUpdate(hits[i].collider.name, hits[i].point);
+            //                addedPointsGT.Add(hits[i].point);
+            //            }
+            //        }
+            //    }
+            //}
 
         foreach (string name in colliderHitName)
         {
@@ -318,11 +317,6 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         valueDictionary.Add(name, tempVectorList);
     }
 
-
-    //float PercentageCount(List<Vector3> GTdata, float num)
-    //{
-    //    return num/(GTdata.Count());
-    //}
 
     float PercentageCount(float part, float gt)
     {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 //using System.IO;
 using UnityEngine.XR.ARSubsystems;
-using UnityEngine.UI;
 //using System.Linq;
 
 namespace UnityEngine.XR.ARFoundation
