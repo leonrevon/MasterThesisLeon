@@ -24,3 +24,8 @@ In Point Cloud scene, the application will track the feature points of the objec
 ![4mdn8j](https://user-images.githubusercontent.com/26881328/99151828-0c6b9f00-269e-11eb-8631-fc20f0911a4c.gif)
 
 
+In Meshing scene, using collected mesh data from LiDAR sensor, the application analyze and show percentage/ confidence level where the object parts is available or not. The material of the virtual object will change to green if the system detect that the parts are there. The GUI shows number of mesh data collected, Ground truth collected, percentage of each part (Confidence level) and also parts that are undetected/ not visually presented in the scene.
+
+![4mdpv8](https://user-images.githubusercontent.com/26881328/99152170-62414680-26a0-11eb-9764-2235d004bd4e.gif)
+
+
