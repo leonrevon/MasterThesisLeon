@@ -15,4 +15,4 @@ This is done by comparing the 3D CAD Model with the real world object.
 
 The 3D CAD Model is superimposed on the real world object by implement image tracking based on marker.
 The image is the 3D CAD Model used in this work.
-![alt text](https://github.com/leonrevon/MasterThesisLeon/image/CADModel.png?raw=true)
+![alt text](https://github.com/leonrevon/MasterThesisLeon/blob/main/image/CADModel.png?raw=true)
