@@ -14,8 +14,10 @@ public class MeshingScript : MonoBehaviour
     List<string> nameList = new List<string>();
    
     Dictionary<string, int> meshVote = new Dictionary<string, int>();
-    Dictionary<string, int> gtNumber = new Dictionary<string, int>();    
-      
+    Dictionary<string, int> gtNumber = new Dictionary<string, int>();
+    Dictionary<string, float> sizePart = new Dictionary<string, float>();
+    Dictionary<string, Material> defaultMaterial = new Dictionary<string, Material>();
+
     public Text text;
     public Text text2;
     public Text text3;
@@ -38,17 +40,18 @@ public class MeshingScript : MonoBehaviour
         myChildObjects.ForEach(myChildObject =>
         {
             string name = myChildObject.name;
-            nameList.Add(myChildObject.name);            
+            nameList.Add(myChildObject.name);
+            defaultMaterial.Add(name, myChildObject.GetComponent<Renderer>().material);
         });        
     }
-    private void Update()
+    private void FixedUpdate()
     {
         
         RayCastMethod();
 
         foreach (string name in nameList)
         {
-            VoteResultPrint(name);            
+            VoteResultPrint(name);
         }
 
         voteResult = "";
@@ -107,9 +110,8 @@ public class MeshingScript : MonoBehaviour
 
     void MeshCheckVote(string name)
     {
-        if (!meshVote.ContainsKey(name))        
+        if (!meshVote.ContainsKey(name))
             meshVote.Add(name, 0);
-        
         meshVote[name]++;
     }
 
@@ -123,12 +125,14 @@ public class MeshingScript : MonoBehaviour
 
     void VoteResultPrint(string name)
     {
-        if (meshVote.ContainsKey(name))
+        if (gtNumber.ContainsKey(name))
         {
+            if (!meshVote.ContainsKey(name))
+                meshVote.Add(name, 0);
+
             voteResult = voteResult + "\n" + name + ": " + gtNumber[name].ToString();//GT captured            
             voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(meshVote[name], gtNumber[name]).ToString("F2") + "%"; // Percentage
-            voteResult3 = voteResult3 + "\n" + name + ": " + meshVote[name].ToString();//PC captured
-            //voteResult3 = voteResult3 + "\n" + name + ": " + PercentageDynamic(name);
+            voteResult3 = voteResult3 + "\n" + name + ": " + meshVote[name].ToString();//PC captured            
 
             text.text = voteResult;
             text2.text = voteResult2;
@@ -138,17 +142,17 @@ public class MeshingScript : MonoBehaviour
             {
                 GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
             }
+            else
+            {
+                GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
+            }
+
+            if (PercentageCount(meshVote[name], gtNumber[name]) < 3.0 && name !="CAD")
+                voteResult4 = voteResult4 + "\n" + name;
         }
 
-        else
-        {
-            if(name != "CAD")
-            {                
-                voteResult4 = voteResult4 + "\n" + name;
-                text4.text = voteResult4;
-            }
-            
-        }                                                     
+        text4.text = voteResult4;
+
     }
 
 
@@ -169,8 +173,9 @@ public class MeshingScript : MonoBehaviour
 
         else
             p = 0.1f;
-           
 
+        if (!sizePart.ContainsKey(name))
+        sizePart.Add(name, p);
         return p*100;
     }
     
@@ -182,23 +187,14 @@ public class MeshingScript : MonoBehaviour
         string filePath = Application.persistentDataPath + "/" + filePathName;
 
         StreamWriter csvWriter = new StreamWriter(filePath);
-        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number");
+        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number,Dynamic Percentage");
 
         foreach (string names in nameList)
         {
-            if (meshVote.ContainsKey(names))                
-            csvWriter.WriteLine(names + "," + meshVote[names] + "," + gtNumber[names]);
+            if (gtNumber.ContainsKey(names))
+                csvWriter.WriteLine(names + "," + meshVote[names] + "," + gtNumber[names] + "," + sizePart[names]);
         }
-
-        foreach(string names in nameList)
-        {
-            if (!meshVote.ContainsKey(names))
-            {
-                csvWriter.WriteLine();
-                csvWriter.WriteLine("Non Visible Part");
-                csvWriter.WriteLine(names);                   
-            }
-        }
+        
 
         csvWriter.Flush();
         csvWriter.Close();
