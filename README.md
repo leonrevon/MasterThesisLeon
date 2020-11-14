@@ -9,3 +9,10 @@ The following library has been used for this repository:
 
 See also (Not in this repo, for external analysis of point cloud):
 * Open3D ([link](http://www.open3d.org/))
+
+The Master Thesis is about using Augmented Reality to track construction progress.
+This is done by comparing the 3D CAD Model with the real world object.
+
+The 3D CAD Model is superimposed on the real world object by implement image tracking based on marker.
+The image is the 3D CAD Model used in this work.
+![alt text](https://github.com/leonrevon/MasterThesisLeon/image/CADModel.png?raw=true)
