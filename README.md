@@ -21,5 +21,6 @@ The image is the 3D CAD Model used in this work.
 There are two scene in this work, point cloud scene and meshing scene (Using LiDAR).
 In Point Cloud scene, the application will track the feature points of the object of interest.
 
-![alt_text](https://imgflip.com/gif/4mdn8j)
+![4mdn8j](https://user-images.githubusercontent.com/26881328/99151828-0c6b9f00-269e-11eb-8631-fc20f0911a4c.gif)
+
 
