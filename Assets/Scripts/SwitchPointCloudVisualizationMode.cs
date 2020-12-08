@@ -15,26 +15,7 @@ using UnityEngine.XR.ARSubsystems;
 
 public class SwitchPointCloudVisualizationMode : MonoBehaviour
 {
-
-    [SerializeField]
-    Button m_ToggleButton;
-
-    public Button toggleButton
-    {
-        get => m_ToggleButton;
-        set => m_ToggleButton = value;
-    }
-
-    [SerializeField]
-    Text m_Log;
-
-    public Text log
-    {
-        get => m_Log;
-        set => m_Log = value;
-    }
-   
-
+  
     void OnEnable()
     {        
         GetComponent<ARPointCloudManager>().pointCloudsChanged += OnPointCloudsChanged;
@@ -51,14 +32,15 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     public Text text;
     public Text text2;
     public Text text3;
+    public Text text4;
     public GameObject gameObject;
     public Material material;
-    bool effectsOn;
-    bool updateCheck;
+    bool effectsOn;  
     
     string voteResult = "";
     string voteResult2 = "";
     string voteResult3 = "";
+    
 
     Dictionary<string, Vector3> vector = new Dictionary<string, Vector3>();
     Dictionary<string, List<Vector3>> valueDictionary = new Dictionary<string, List<Vector3>>();
@@ -70,7 +52,8 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     List<GameObject> myChildObjects;
     List<string> nameList = new List<string>();
 
-    StringBuilder m_StringBuilder = new StringBuilder();    
+    StringBuilder m_StringBuilder = new StringBuilder();
+    
 
     void OnPointCloudsChanged(ARPointCloudChangedEventArgs eventArgs)
     {
@@ -85,11 +68,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
                 m_StringBuilder.Append($"{visualizer.pointCloudPosition.Count} total points");
             }
 
-        }
-        if (log)
-        {
-            log.text = m_StringBuilder.ToString();
-        }
+        }        
 
         foreach (var pointCloud in eventArgs.added)
         {
@@ -171,7 +150,13 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         {
             if (voteCalculation.ContainsKey(names))
                 csvWriter.WriteLine(names + "," + voteCalculation[names] + "," + GTPart[names]);
-        }               
+        }
+
+        csvWriter.WriteLine("Non Available Parts");
+        foreach(var names in nameList)
+        {
+            csvWriter.WriteLine(names);
+        }
 
         csvWriter.Flush();
         csvWriter.Close();
@@ -202,30 +187,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     }
 
     void Update()
-    {                
-            //for (int x = -2; x < 2; x++)
-            //{
-            //    for (int y = -2; y < 2; y++)
-            //    {
-            //        float screenX = 0 + x;
-            //        float screenY = 0 + y;
-
-            //        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
-
-            //        RaycastHit[] hits;
-
-
-            //        hits = Physics.RaycastAll(Camera.main.transform.position, forward);
-            //        for (int i = 0; i < hits.Length; i++)
-            //        {
-            //            if (hits[i].collider.CompareTag("CAD"))
-            //            {
-            //                GTUpdate(hits[i].collider.name, hits[i].point);
-            //                addedPointsGT.Add(hits[i].point);
-            //            }
-            //        }
-            //    }
-            //}
+    {                         
 
         foreach (string name in colliderHitName)
         {
@@ -246,6 +208,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
         voteResult = "";
         voteResult2 = "";
         voteResult3 = "";
+        //voteResult4 = "";
 
         voteCalculation.Clear();
         GTPart.Clear();        
@@ -255,9 +218,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     void VoteResultPrint(string name)
     {       
         if (voteCalculation.ContainsKey(name))
-        {
-
-            
+        {            
             voteResult = voteResult + "\n" + name + ": " + GTPart[name].ToString(); //GT captured
             voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(voteCalculation[name] , GTPart[name]).ToString("F2")+ "%"; 
             voteResult3 = voteResult3 + "\n" + name + ": " + voteCalculation[name].ToString(); //PC Captured
@@ -265,12 +226,10 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
             text.text = voteResult;
             text2.text = voteResult2;
             text3.text = voteResult3;
-
             
-
             if (effectsOn)
             {
-                if (PercentageCount(voteCalculation[name], GTPart[name]) > 10)
+                if (PercentageCount(voteCalculation[name], GTPart[name]) > PercentageDynamic(name))
                 {
                     GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
                 }
@@ -278,8 +237,10 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
                 {
                     GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
                 }
+                
             }
-            
+
+
 
         }
     }
@@ -308,19 +269,26 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
     {
         effectsOn = value;
     }   
-
-    void GTUpdate(string name, Vector3 item)
-    {
-        List<Vector3> tempVectorList = new List<Vector3>(valueDictionary[name]);        
-        valueDictionary.Remove(name);
-        tempVectorList.Add(item);
-        valueDictionary.Add(name, tempVectorList);
-    }
-
+  
 
     float PercentageCount(float part, float gt)
     {
         return part * 100 / gt;
+    }
+
+    float PercentageDynamic(string name)
+    {
+        float size = GameObject.Find(name).GetComponent<MeshFilter>().mesh.bounds.size.sqrMagnitude;
+        float p;
+        if (size < 2000)
+        {
+            p = 400 / size;
+        }
+
+        else
+            p = 0.1f;
+        
+        return p * 100;
     }
 
     public void ChangeScene()

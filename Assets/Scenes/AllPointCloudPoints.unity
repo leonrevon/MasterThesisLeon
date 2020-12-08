@@ -198,13 +198,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd9764da1a3794d5c90cdaf522a300c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ToggleButton: {fileID: 0}
-  m_Log: {fileID: 402749598}
   cube: {fileID: 7848234991179599348, guid: 1445ad1521a5f4f2b83b5a59e5c066eb, type: 3}
   text: {fileID: 1786249745}
   text2: {fileID: 1967606969}
   text3: {fileID: 1022565168}
-  debug: {fileID: 0}
+  text4: {fileID: 0}
   gameObject: {fileID: 4675986031127754848, guid: 1386c1131f9594ec99f59fce91329ecb,
     type: 3}
   material: {fileID: 2100000, guid: 72317af13fb614d3ea304e5c3564217a, type: 2}
@@ -1626,7 +1624,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -361, y: 763}
+  m_AnchoredPosition: {x: -361, y: 413}
   m_SizeDelta: {x: 300, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1152615413
@@ -2463,7 +2461,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -620, y: -751}
-  m_SizeDelta: {x: 1024, y: 1500}
+  m_SizeDelta: {x: 1024, y: 800}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1786249745
 MonoBehaviour:

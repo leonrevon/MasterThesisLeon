@@ -10,13 +10,14 @@ using UnityGoogleDrive;
 public class MeshingScript : MonoBehaviour
 {
     List<GameObject> myChildObjects;
-    public GameObject gameObject;    
+    public GameObject gameObject;
     List<string> nameList = new List<string>();
-   
+
     Dictionary<string, int> meshVote = new Dictionary<string, int>();
     Dictionary<string, int> gtNumber = new Dictionary<string, int>();
     Dictionary<string, float> sizePart = new Dictionary<string, float>();
     Dictionary<string, Material> defaultMaterial = new Dictionary<string, Material>();
+    Dictionary<string, int> notVisibleDictionary = new Dictionary<string, int>();
 
     public Text text;
     public Text text2;
@@ -27,7 +28,7 @@ public class MeshingScript : MonoBehaviour
     string voteResult = "";
     string voteResult2 = "";
     string voteResult3 = "";
-    string voteResult4 = "";
+
 
     public void ChangeScene()
     {
@@ -42,28 +43,23 @@ public class MeshingScript : MonoBehaviour
             string name = myChildObject.name;
             nameList.Add(myChildObject.name);
             defaultMaterial.Add(name, myChildObject.GetComponent<Renderer>().material);
-        });        
+        });
     }
-    private void FixedUpdate()
+    private void Update()
     {
-        
         RayCastMethod();
-
         foreach (string name in nameList)
         {
             VoteResultPrint(name);
         }
-
         voteResult = "";
         voteResult2 = "";
         voteResult3 = "";
-        voteResult4 = "";        
 
     }
 
     void RayCastMethod()
     {
-
         for (int k = -2; k < 2; k++)
         {
             for (int j = -2; j < 2; j++)
@@ -79,35 +75,67 @@ public class MeshingScript : MonoBehaviour
                 {
                     if (hits[i].collider.CompareTag("Mesh"))
                     {
-                        float closestDistance = 1;
-                        Collider closestCollider = null;
-                        for (int x = 0; x < 200; x++)
-                        {
-                            Vector3 meshPoint = hits[i].point;
-                            Vector3 direction = Random.onUnitSphere;
-                            RaycastHit[] meshHits;
-                            meshHits = Physics.RaycastAll(meshPoint, direction);
 
-                            for (int y = 0; y < meshHits.Length; y++)
+                        Vector3 meshPoints = hits[i].point;
+
+                        for (int x = 0; x < hits.Length; x++)
+                        {
+                            var dis = Vector3.Distance(hits[x].point, meshPoints);
+
+                            if (dis < 0.01)
                             {
-                                var dis = Vector3.Distance(meshPoint, meshHits[y].point);
-                                if (dis < closestDistance)
-                                {
-                                    closestCollider = meshHits[y].collider;
-                                    closestDistance = dis;
-                                }
-                            }                           
+                                MeshCheckVote(hits[x].collider.name);
+                            }
                         }
-                        MeshCheckVote(closestCollider.name);
+
+                        for (int y = i; y >= 0; y--)
+                        {
+                            GTCheckVote(hits[y].collider.name);
+                        }
+
                     }
-                    else                    
-                        GTCheckVote(hits[i].collider.name);                    
+
                 }
             }
         }
-        
     }
 
+
+    //    float closestDistance = 1;
+    //    Collider closestCollider = null;
+
+
+    //                        for (int x = 0; x< 200; x++)
+    //                        {
+    //                            Vector3 meshPoint = hits[i].point;
+    //    Vector3 direction = Random.onUnitSphere;
+    //    RaycastHit[] meshHits;
+    //    meshHits = Physics.RaycastAll(meshPoint, direction);
+
+    //                            for (int y = 0; y<meshHits.Length; y++)
+    //                            {
+    //                                var dis = Vector3.Distance(meshPoint, meshHits[y].point);
+    //                                if (dis<closestDistance)
+    //                                {
+    //                                    closestCollider = meshHits[y].collider;
+    //                                    closestDistance = dis;
+    //                                }
+    //                            }
+    //                        }
+    //                        MeshCheckVote(closestCollider.name);
+    //GTCheckVote(closestCollider.name);
+
+    //                        for (int z = i; z <= 0; z--)
+    //                        {
+    //                            GTCheckVote(hits[z].collider.name);
+    //                        }
+    //void VisibleCheckVote(string name)
+    //{
+    //    if (!notVisibleDictionary.ContainsKey(name))
+    //        notVisibleDictionary.Add(name, 0);
+    //    notVisibleDictionary[name]++;
+
+    //}
     void MeshCheckVote(string name)
     {
         if (!meshVote.ContainsKey(name))
@@ -120,7 +148,7 @@ public class MeshingScript : MonoBehaviour
         if (!gtNumber.ContainsKey(name))
             gtNumber.Add(name, 0);
 
-        gtNumber[name]++;                
+        gtNumber[name]++;
     }
 
     void VoteResultPrint(string name)
@@ -129,32 +157,41 @@ public class MeshingScript : MonoBehaviour
         {
             if (!meshVote.ContainsKey(name))
                 meshVote.Add(name, 0);
-
-            voteResult = voteResult + "\n" + name + ": " + gtNumber[name].ToString();//GT captured            
-            voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(meshVote[name], gtNumber[name]).ToString("F2") + "%"; // Percentage
-            voteResult3 = voteResult3 + "\n" + name + ": " + meshVote[name].ToString();//PC captured            
-
-            text.text = voteResult;
-            text2.text = voteResult2;
-            text3.text = voteResult3;
+            
+            VoteResultsSave(name);           
 
             if (PercentageCount(meshVote[name], gtNumber[name]) > PercentageDynamic(name))
             {
                 GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
+
             }
-            else
+            else if (PercentageCount(meshVote[name], gtNumber[name]) < PercentageDynamic(name))
             {
                 GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
+
             }
 
-            if (PercentageCount(meshVote[name], gtNumber[name]) < 3.0 && name !="CAD")
-                voteResult4 = voteResult4 + "\n" + name;
-        }
+            //else if (PercentageCount(notVisibleDictionary[name], gtNumber[name]) > PercentageDynamic(name))
+            //{
+            //    voteResult4 = voteResult4 + "\n" + name;
 
-        text4.text = voteResult4;
+            //}
+
+
+            text.text = voteResult;
+            text2.text = voteResult2;
+            text3.text = voteResult3;
+            //text4.text = voteResult4;
+        }
 
     }
 
+    void VoteResultsSave(string name)
+    {
+        voteResult = voteResult + "\n" + name + ": " + gtNumber[name].ToString();//GT captured               
+        voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(meshVote[name], gtNumber[name]).ToString("F2") + "%"; // Percentage
+        voteResult3 = voteResult3 + "\n" + name + ": " + meshVote[name].ToString();//PC captured    
+    }
 
 
     double PercentageCount(double part, double gt)
@@ -175,10 +212,10 @@ public class MeshingScript : MonoBehaviour
             p = 0.1f;
 
         if (!sizePart.ContainsKey(name))
-        sizePart.Add(name, p);
-        return p*100;
+            sizePart.Add(name, p);
+        return p * 100;
     }
-    
+
 
     public void GenerateSummary()
     {
@@ -194,8 +231,6 @@ public class MeshingScript : MonoBehaviour
             if (gtNumber.ContainsKey(names))
                 csvWriter.WriteLine(names + "," + meshVote[names] + "," + gtNumber[names] + "," + sizePart[names]);
         }
-        
-
         csvWriter.Flush();
         csvWriter.Close();
 
