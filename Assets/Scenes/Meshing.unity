@@ -159,7 +159,7 @@ MonoBehaviour:
   text3: {fileID: 1425246930}
   text4: {fileID: 0}
   material: {fileID: 2100000, guid: 72317af13fb614d3ea304e5c3564217a, type: 2}
-  distanceThreshold: 0.1
+  distanceThreshold: 0
 --- !u!114 &126975150
 MonoBehaviour:
   m_ObjectHideFlags: 0
