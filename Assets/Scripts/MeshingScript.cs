@@ -11,12 +11,12 @@ public class MeshingScript : MonoBehaviour
 {
     List<GameObject> myChildObjects;
     public GameObject gameObject;
+    public List<string> output = new List<string>();
     List<string> nameList = new List<string>();
+    List<string> hitsBefore = new List<string>();
 
     Dictionary<string, int> cadHits = new Dictionary<string, int>();
     Dictionary<string, int> rHits = new Dictionary<string, int>();
-    //Dictionary<string, int> meshVote = new Dictionary<string, int>();
-    //Dictionary<string, int> gtNumber = new Dictionary<string, int>();
     Dictionary<string, float> sizePart = new Dictionary<string, float>();
     Dictionary<string, Material> defaultMaterial = new Dictionary<string, Material>();
 
@@ -49,81 +49,101 @@ public class MeshingScript : MonoBehaviour
     {
         RayCastMethod();
         VoteResultPrint();
+        print();
     }
 
     void RayCastMethod()
     {
-
-        //for (int k = -5; k < 5; k++)
-        //{
-        //    for (int j = -5; j < 5; j++)
-        //    {
-        //float screenX = 0 + j;
-        //float screenY = 0 + k;
-        //Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
-        for (int k = 0; k < 100; k++)
+        
+        for (int k = 0; k < 500; k++)
         {
 
-            int meshIndices = -1;
             Ray ray = Camera.main.ViewportPointToRay(new Vector3(Random.value, Random.value, 0));
-
             RaycastHit[] hits;
             hits = Physics.RaycastAll(ray);
-            //hits = Physics.RaycastAll(Camera.main.transform.position, forward);
-
+            int meshIndice = -1;
             for (int i = 0; i < hits.Length; i++)
             {
-                if (hits[i].collider.CompareTag("Mesh"))
+
+                if (hits[i].collider.CompareTag("CAD"))
                 {
-                    Vector3 meshPoints = hits[i].point;
+
+                    meshIndice = i;
+                    if (hits.Length <= i + 1) continue;
+
+                    string classifiedCadHit = null;
+
                     for (int x = 0; x < hits.Length; x++)
                     {
-                        var dis = Vector3.Distance(hits[x].point, meshPoints);
-                        if (dis < 0.01)
+                        if (hits[x].collider.CompareTag("Mesh"))
                         {
-                            meshIndices = x;
-                            MeshCheckVote(hits[x].collider.name);
-                            GTCheckVote(hits[x].collider.name);
-                            List<string> hitsBefore = hits.ToList().GetRange(0, x).ToList().Select(y => y.collider.name).ToList();
-                            hitsBefore.ForEach(hit =>
+                            var dis = Vector3.Distance(hits[x].point, hits[meshIndice].point);
+                            if (dis < 0.01)
                             {
-                                GTCheckVote(hit);
-                            });
+                                classifiedCadHit = hits[meshIndice].collider.name;
+                            }
                         }
-                    }
-                }
 
-                if (meshIndices < 0)
-                {
-                    hits.ToList().ForEach(hit =>
+                    }
+                    if (classifiedCadHit == null) continue;
+                    List<string> hitsBefore = hits.ToList().GetRange(0, meshIndice).ToList().Select(x => x.collider.name).ToList();
+
+                    if (!rHits.ContainsKey(classifiedCadHit))
                     {
-                        GTCheckVote(hit.collider.name);
+                        rHits.Add(classifiedCadHit, 0);
+                    }
+                    if (!cadHits.ContainsKey(classifiedCadHit))
+                    {
+                        cadHits.Add(classifiedCadHit, 0);
+                    }
+                    rHits[classifiedCadHit]++;
+                    cadHits[classifiedCadHit]++;
+                    hitsBefore.ForEach(hit =>
+                    {
+                        if (!rHits.ContainsKey(hit))
+                        {
+                            rHits.Add(hit, 0);
+                        }
+                        if (!cadHits.ContainsKey(hit))
+                        {
+                            cadHits.Add(hit, 0);
+                        }
+                        cadHits[hit]++;
                     });
                 }
+                
             }
-            //}
-            //}
+            //if (meshIndice < 0)
+            //{
+            //    hits.ToList().ForEach(hit =>
+            //    {
+            //        if (!rHits.ContainsKey(hit.collider.name))
+            //        {
+            //            rHits.Add(hit.collider.name, 0);
+            //            cadHits.Add(hit.collider.name, 0);
+            //        }
 
+            //        cadHits[hit.collider.name]++;
+            //    });
+            //}
         }
 
     }
 
+    //void MeshCheckVote(string name)
+    //{
+    //    if (!rHits.ContainsKey(name))
+    //        rHits.Add(name, 0);
+    //    rHits[name]++;
+    //}
 
+    //void GTCheckVote(string name)
+    //{
+    //    if (!cadHits.ContainsKey(name))
+    //        cadHits.Add(name, 0);
 
-    void MeshCheckVote(string name)
-    {
-        if (!rHits.ContainsKey(name))
-            rHits.Add(name, 0);
-        rHits[name]++;
-    }
-
-    void GTCheckVote(string name)
-    {
-        if (!cadHits.ContainsKey(name))
-            cadHits.Add(name, 0);
-
-        cadHits[name]++;
-    }
+    //    cadHits[name]++;
+    //}
 
 
     void VoteResultPrint()
@@ -137,32 +157,24 @@ public class MeshingScript : MonoBehaviour
             if (!hit.Contains("Mesh"))
             {
                 VoteResultsSave(hit);
+                MaterialPercentageChange(hit);
             }
         });
 
-        text.text = voteResult;
-        text2.text = voteResult2;
-        text3.text = voteResult3;
+        //text.text = voteResult;
+        //text2.text = voteResult2;
+        //text3.text = voteResult3;
     }
 
     void VoteResultsSave(string name)
     {
         voteResult = voteResult + "\n" + name + ": " + cadHits[name].ToString();//GT captured               
-        voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(rHits[name], cadHits[name]).ToString("F2") + "%"; // Percentage
-        //voteResult3 = voteResult3 + "\n" + name + ": " + distance.ToString();//PC captured
+        voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(rHits[name], cadHits[name]).ToString("F2") + "%"; // Percentage        
         voteResult3 = voteResult3 + "\n" + name + ": " + rHits[name].ToString();//PC captured
 
-        if (PercentageCount(rHits[name], cadHits[name]) > PercentageDynamic(name))
-        {
-            GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
-        }
-        else if (PercentageCount(rHits[name], cadHits[name]) < PercentageDynamic(name))
-        {
-            GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
-        }
     }
 
-    double PercentageCount(double part, double gt)
+        double PercentageCount(double part, double gt)
     {
         return part * 100 / gt;
     }
@@ -191,12 +203,12 @@ public class MeshingScript : MonoBehaviour
         string filePath = Application.persistentDataPath + "/" + filePathName;
 
         StreamWriter csvWriter = new StreamWriter(filePath);
-        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number,Dynamic Percentage");
+        csvWriter.WriteLine("Part Name,Total Part Number,Total GT Number");
 
         foreach (string names in nameList)
         {
             if (cadHits.ContainsKey(names))
-                csvWriter.WriteLine(names + "," + rHits[names] + "," + cadHits[names] + "," + sizePart[names]);
+                csvWriter.WriteLine(names + "," + rHits[names] + "," + cadHits[names]);
         }
         csvWriter.Flush();
         csvWriter.Close();
@@ -207,5 +219,41 @@ public class MeshingScript : MonoBehaviour
         var csvFile = new UnityGoogleDrive.Data.File() { Name = filePathName, Content = csvContent };
         GoogleDriveFiles.Create(csvFile).Send();
         enabled = true;
+    }
+
+    public void print()
+    {
+        output.Clear();
+        rHits.Keys.ToList().ForEach(hit =>
+        {
+            if (!hit.Contains("Mesh"))
+            {
+                output.Add(hit + ": " + rHits[hit] + " rHits, " + cadHits[hit] + " cadHits // " + (float)((float)((float)rHits[hit] / (float)cadHits[hit]) * 100.0f) + "%");
+                MaterialPercentageChange(hit);
+            }
+
+        });
+
+        voteResult = "";
+        output.ToList().ForEach(line =>
+        {
+            voteResult = voteResult + "\n" + line;
+        });
+
+        //text.text = voteResult;
+
+
+    }
+
+    public void MaterialPercentageChange(string name)
+    {
+        if (PercentageCount(rHits[name], cadHits[name]) > 80)
+        {
+            GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
+        }
+        else if (PercentageCount(rHits[name], cadHits[name]) < 80)
+        {
+            GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
+        }
     }
 }

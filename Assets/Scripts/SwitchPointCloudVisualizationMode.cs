@@ -229,7 +229,7 @@ public class SwitchPointCloudVisualizationMode : MonoBehaviour
             
             if (effectsOn)
             {
-                if (PercentageCount(voteCalculation[name], GTPart[name]) > PercentageDynamic(name))
+                if (PercentageCount(voteCalculation[name], GTPart[name]) > 80)
                 {
                     GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
                 }

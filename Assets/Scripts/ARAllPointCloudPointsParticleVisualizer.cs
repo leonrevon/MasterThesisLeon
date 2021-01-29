@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 //using System.IO;
 using UnityEngine.XR.ARSubsystems;
 //using System.Linq;
@@ -23,6 +24,8 @@ namespace UnityEngine.XR.ARFoundation
         public Dictionary<string, List<Vector3>> GTParts = new Dictionary<string, List<Vector3>>();
         public Dictionary<string, int> GTHit = new Dictionary<string, int>();
         public Dictionary<string, int> PCHit = new Dictionary<string, int>();
+        Dictionary<string, int> cadHits = new Dictionary<string, int>();
+        Dictionary<string, int> rHits = new Dictionary<string, int>();
         bool effectsOn;
 
 
@@ -59,33 +62,69 @@ namespace UnityEngine.XR.ARFoundation
             {
                 var identifiers = m_PointCloud.identifiers.Value;
 
-                for (int x = -2; x < 2; x++)
+                for (int k = 0; k < 500; k++)
                 {
-                    for (int y = -2; y < 2; y++)
-                    {
-                        float screenX = 0 + x;
-                        float screenY = 0 + y;
 
-                        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
-                        RaycastHit[] hits;
-                        hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+                    Ray ray = Camera.main.ViewportPointToRay(new Vector3(Random.value, Random.value, 0));
+                    RaycastHit[] hits;
+                    hits = Physics.RaycastAll(ray);
+                    int meshIndice = -1;
+                    for (int i = 0; i < hits.Length; i++)
+                    {                        
+                        if (hits.Length <= i + 1) continue;
+                        string classifiedCadHit = null;
 
-                        for (int i = 0; i < hits.Length; i++)
+                        for (int x = 0; x < positions.Length; x++)
                         {
-                            gtHitName.Add(hits[i].collider.name);
-
-                            for (int j = 0; j < positions.Length; j++)
+                            var dis = Vector3.Distance(positions[x], hits[i].point);
+                            if (dis < 0.01)
                             {
-                                var dis = Vector3.Distance(hits[i].point, positions[j]);
-                                if (dis < 0.01)
-                                {
-                                    m_Points[identifiers[j]] = positions[j];
-                                    pointCloudPosition.Add(m_Points[identifiers[j]]); //Dictionary add position with key identifier                                    
-                                    colliderHitName.Add(hits[i].collider.name);                                    
-                                }
+                                classifiedCadHit = hits[meshIndice].collider.name;
+                                m_Points[identifiers[x]] = positions[x];
+                                pointCloudPosition.Add(m_Points[identifiers[x]]);
                             }
+
+
                         }
+                        if (classifiedCadHit == null) continue;
+                        List<string> hitsBefore = hits.ToList().GetRange(0, meshIndice).ToList().Select(x => x.collider.name).ToList();
+
+                        colliderHitName.Add(classifiedCadHit);
+                        gtHitName.Add(classifiedCadHit);
+
+                        hitsBefore.ForEach(hit =>
+                        {
+                            gtHitName.Add(hit);
+                        });
+
                     }
+                    //for (int x = -2; x < 2; x++)
+                    //{
+                    //    for (int y = -2; y < 2; y++)
+                    //    {
+                    //        float screenX = 0 + x;
+                    //        float screenY = 0 + y;
+
+                    //        Vector3 forward = Camera.main.transform.TransformDirection(screenX, screenY, 100);
+                    //        RaycastHit[] hits;
+                    //        hits = Physics.RaycastAll(Camera.main.transform.position, forward);
+
+                    //        for (int i = 0; i < hits.Length; i++)
+                    //        {
+                    //            gtHitName.Add(hits[i].collider.name);
+
+                    //            for (int j = 0; j < positions.Length; j++)
+                    //            {
+                    //                var dis = Vector3.Distance(hits[i].point, positions[j]);
+                    //                if (dis < 0.01)
+                    //                {
+                    //                    m_Points[identifiers[j]] = positions[j];
+                    //                    pointCloudPosition.Add(m_Points[identifiers[j]]); //Dictionary add position with key identifier                                    
+                    //                    colliderHitName.Add(hits[i].collider.name);                                    
+                    //                }
+                    //            }
+                    //        }
+                    //    }
                 }
             }
 
@@ -157,7 +196,7 @@ namespace UnityEngine.XR.ARFoundation
         public void EffectsOn(bool value)
         {
             effectsOn = value;
-        }           
+        }
 
         public ARPointCloud m_PointCloud;
 
