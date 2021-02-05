@@ -113,37 +113,10 @@ public class MeshingScript : MonoBehaviour
                 }
                 
             }
-            //if (meshIndice < 0)
-            //{
-            //    hits.ToList().ForEach(hit =>
-            //    {
-            //        if (!rHits.ContainsKey(hit.collider.name))
-            //        {
-            //            rHits.Add(hit.collider.name, 0);
-            //            cadHits.Add(hit.collider.name, 0);
-            //        }
 
-            //        cadHits[hit.collider.name]++;
-            //    });
-            //}
         }
 
     }
-
-    //void MeshCheckVote(string name)
-    //{
-    //    if (!rHits.ContainsKey(name))
-    //        rHits.Add(name, 0);
-    //    rHits[name]++;
-    //}
-
-    //void GTCheckVote(string name)
-    //{
-    //    if (!cadHits.ContainsKey(name))
-    //        cadHits.Add(name, 0);
-
-    //    cadHits[name]++;
-    //}
 
 
     void VoteResultPrint()
@@ -161,9 +134,6 @@ public class MeshingScript : MonoBehaviour
             }
         });
 
-        //text.text = voteResult;
-        //text2.text = voteResult2;
-        //text3.text = voteResult3;
     }
 
     void VoteResultsSave(string name)
@@ -171,6 +141,10 @@ public class MeshingScript : MonoBehaviour
         voteResult = voteResult + "\n" + name + ": " + cadHits[name].ToString();//GT captured               
         voteResult2 = voteResult2 + "\n" + name + ": " + PercentageCount(rHits[name], cadHits[name]).ToString("F2") + "%"; // Percentage        
         voteResult3 = voteResult3 + "\n" + name + ": " + rHits[name].ToString();//PC captured
+
+        text.text = voteResult;
+        text2.text = voteResult2;
+        text3.text = voteResult3;
 
     }
 
@@ -185,14 +159,12 @@ public class MeshingScript : MonoBehaviour
         float p;
         if (size < 2000)
         {
-            p = 400 / size;
+            p = 0.3f;
         }
 
         else
-            p = 0.1f;
-
-        if (!sizePart.ContainsKey(name))
-            sizePart.Add(name, p);
+            p = 0.8f;
+        
         return p * 100;
     }
 
@@ -247,11 +219,11 @@ public class MeshingScript : MonoBehaviour
 
     public void MaterialPercentageChange(string name)
     {
-        if (PercentageCount(rHits[name], cadHits[name]) > 80)
+        if (PercentageCount(rHits[name], cadHits[name]) > 10)
         {
             GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = material;
         }
-        else if (PercentageCount(rHits[name], cadHits[name]) < 80)
+        else if (PercentageCount(rHits[name], cadHits[name]) < 10)
         {
             GameObject.Find(name).GetComponent<Renderer>().sharedMaterial = defaultMaterial[name];
         }
